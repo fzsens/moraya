@@ -46,6 +46,10 @@
   margin: 0.5em 0;
 }
 
+.moraya-editor > p:first-child {
+  margin-top: 0;
+}
+
 /* Strong & Emphasis */
 .moraya-editor strong {
   font-weight: 600;
@@ -788,7 +792,7 @@
 /* ProseMirror specific */
 .ProseMirror {
   outline: none;
-  min-height: calc(100vh - var(--titlebar-height) - var(--statusbar-height) - 8rem);
+  min-height: 0;
   caret-color: var(--text-primary);
   cursor: text;
   /* Standard ProseMirror CSS — required for correct cursor positioning.

@@ -486,10 +486,10 @@
     updateActiveHeadingSource();
   });
 }}>
-  {#if showOutline}
-    <OutlinePanel headings={outlineHeadings} activeId={activeHeadingId} width={outlineWidth} onSelect={handleOutlineSelectSource} onWidthChange={onOutlineWidthChange} />
-  {/if}
   <div class="source-editor-inner" style="max-width: {showOutline ? `${editorLineWidth + outlineWidth}px` : `${editorLineWidth}px`}">
+    {#if showOutline}
+      <OutlinePanel headings={outlineHeadings} activeId={activeHeadingId} width={outlineWidth} onSelect={handleOutlineSelectSource} onWidthChange={onOutlineWidthChange} />
+    {/if}
     {#if showLineNumbers}
       <div class="line-numbers">
         {#each lineHeights as h, i}
@@ -516,7 +516,7 @@
 <style>
   .source-editor-outer {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: overlay;
     overflow-x: hidden;
     min-width: 0;
     /* Horizontal padding scales with actual pane width (% is relative to
@@ -527,16 +527,10 @@
   }
 
   .source-editor-outer.has-outline {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-    padding-left: clamp(0.5rem, 2%, 1.5rem);
   }
 
   .has-outline .source-editor-inner {
-    flex: 1;
-    min-width: 0;
-    margin: 0;
+    align-items: flex-start;
   }
 
   .source-editor-outer.hide-scrollbar {
@@ -551,7 +545,7 @@
   .source-editor-inner {
     width: 100%;
     margin: 0 auto;
-    min-height: 100%;
+    min-height: 0;
     display: flex;
     word-wrap: break-word;
     overflow-wrap: break-word;

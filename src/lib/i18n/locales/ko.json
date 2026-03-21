@@ -243,6 +243,7 @@
     "placeholderSelection": "선택한 내용에 대해 질문하세요...",
     "send": "보내기 (⌘↵)",
     "stop": "중지 (Esc)",
+    "retry": "재시도",
     "interrupted": "중단됨",
     "insertToEditor": "편집기에 삽입",
     "replaceSelection": "선택 영역 교체",

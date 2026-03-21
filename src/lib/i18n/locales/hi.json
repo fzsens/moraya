@@ -243,6 +243,7 @@
     "placeholderSelection": "चयन के बारे में पूछें...",
     "send": "भेजें (⌘↵)",
     "stop": "रोकें (Esc)",
+    "retry": "पुनः प्रयास करें",
     "interrupted": "बाधित",
     "insertToEditor": "एडिटर में डालें",
     "replaceSelection": "चयन बदलें",

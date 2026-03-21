@@ -243,6 +243,7 @@
     "placeholderSelection": "Спросите о выделенном...",
     "send": "Отправить (⌘↵)",
     "stop": "Остановить (Esc)",
+    "retry": "Повторить",
     "interrupted": "Прервано",
     "insertToEditor": "Вставить в редактор",
     "replaceSelection": "Заменить выделение",

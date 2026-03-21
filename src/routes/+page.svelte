@@ -2437,20 +2437,10 @@ ${tr('welcome.tip')}
   }
 
   /* macOS: offset content below native traffic lights (TitleBarStyle::Overlay).
-     Padding is applied to individual content panes (not .app-container) so that
-     structural borders (sidebar border-right, split divider border-left) extend
-     flush to the top of the window. */
+     margin-top on .editor-area avoids the WebKit scrollbar quirk caused by
+     padding-top on a flex parent with overflow:auto children. */
   :global(.platform-macos) .editor-area {
-    padding-top: 28px;
-  }
-
-  :global(.platform-macos) .editor-area:has(.split-container) {
-    padding-top: 0;
-  }
-
-  :global(.platform-macos) .split-source,
-  :global(.platform-macos) .split-visual {
-    padding-top: 28px;
+    margin-top: 28px;
   }
 
   :global(.platform-macos) .app-body > :global(.sidebar) {

@@ -243,6 +243,7 @@
     "placeholderSelection": "選択範囲について質問...",
     "send": "送信（⌘↵）",
     "stop": "停止（Esc）",
+    "retry": "再試行",
     "interrupted": "中断されました",
     "insertToEditor": "エディターに挿入",
     "replaceSelection": "選択範囲を置換",

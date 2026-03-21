@@ -243,6 +243,7 @@
     "placeholderSelection": "Fragen zur Auswahl...",
     "send": "Senden (⌘↵)",
     "stop": "Stoppen (Esc)",
+    "retry": "Wiederholen",
     "interrupted": "Unterbrochen",
     "insertToEditor": "In den Editor einfügen",
     "replaceSelection": "Auswahl ersetzen",

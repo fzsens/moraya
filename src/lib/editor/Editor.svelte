@@ -2238,7 +2238,7 @@
 <style>
   .editor-wrapper {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: overlay;
     overflow-x: hidden;
     min-width: 0;
     /* Horizontal padding scales with actual pane width (% is relative to
@@ -2252,6 +2252,7 @@
   .editor-wrapper.ready {
     visibility: visible;
   }
+
 
   /* Inner centering container: constrains total width and centers with auto margins.
      Without outline: max-width = editorLineWidth (e.g. 800px).

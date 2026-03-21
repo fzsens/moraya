@@ -243,6 +243,7 @@
     "placeholderSelection": "اسأل عن النص المحدد...",
     "send": "إرسال (⌘↵)",
     "stop": "إيقاف (Esc)",
+    "retry": "إعادة المحاولة",
     "interrupted": "تمت المقاطعة",
     "insertToEditor": "إدراج في المحرر",
     "replaceSelection": "استبدال التحديد",

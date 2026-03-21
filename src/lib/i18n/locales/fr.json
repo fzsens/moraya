@@ -239,6 +239,7 @@
     "placeholderSelection": "Posez une question sur la sélection...",
     "send": "Envoyer (⌘↵)",
     "stop": "Arrêter (Esc)",
+    "retry": "Réessayer",
     "interrupted": "Interrompu",
     "insertToEditor": "Insérer dans l'éditeur",
     "replaceSelection": "Remplacer la sélection",
