@@ -250,6 +250,7 @@
     "placeholderSelection": "Ask about selection...",
     "send": "Send (⌘↵)",
     "stop": "Stop (Esc)",
+    "retry": "Retry",
     "interrupted": "Interrupted",
     "insertToEditor": "Insert into editor",
     "replaceSelection": "Replace selection",

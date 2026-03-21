@@ -250,6 +250,7 @@
     "placeholderSelection": "询问选中内容...",
     "send": "发送（⌘↵）",
     "stop": "停止（Esc）",
+    "retry": "重试",
     "interrupted": "被打断",
     "insertToEditor": "插入到编辑器",
     "replaceSelection": "替换选中内容",

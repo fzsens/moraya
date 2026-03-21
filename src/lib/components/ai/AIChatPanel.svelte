@@ -595,6 +595,18 @@
     }
   }
 
+  async function handleRetry() {
+    if (isLoading) return;
+    const lastMsg = aiStore.popLastUserMessage();
+    if (!lastMsg) return;
+    userAtBottom = true;
+    try {
+      await sendChatMessage(lastMsg.content, latestContent(), lastMsg.images);
+    } catch {
+      // Error is handled by store
+    }
+  }
+
   function hasDraftContent(): boolean {
     return !!inputText.trim() || pendingImages.length > 0;
   }
@@ -1900,6 +1912,9 @@
           <span class="error-text">{error}</span>
           <span class="message-time error-time">{formatTime(Date.now())}</span>
           <div class="message-actions">
+            <button class="action-btn error-action" onclick={handleRetry} title={$t('ai.retry')}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M10.25 6A4.25 4.25 0 1 1 6 1.75V0l3 2.5-3 2.5V3.25A2.75 2.75 0 1 0 8.75 6h1.5z"/></svg>
+            </button>
             <button class="action-btn error-action" onclick={() => navigator.clipboard.writeText(error || '')} title={$t('common.copy')}>
               <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4 0h8v8h-2V2H4V0zM0 4h8v8H0V4zm2 2v4h4V6H2z"/></svg>
             </button>

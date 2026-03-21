@@ -485,6 +485,34 @@ function createAIStore() {
       }
       update(state => ({ ...state, chatHistory: [], lastResponse: null, interrupted: false }));
     },
+    /**
+     * Remove the last user message and everything after it (partial assistant
+     * responses, tool results added during the failed exchange). Clears the
+     * error and streaming state so the UI is ready for a retry.
+     * Returns the removed user message info, or null if none found.
+     */
+    popLastUserMessage(): { content: string; images?: ImageAttachment[] } | null {
+      const state = get({ subscribe });
+      let lastUserIdx = -1;
+      for (let i = state.chatHistory.length - 1; i >= 0; i--) {
+        if (state.chatHistory[i].role === 'user') {
+          lastUserIdx = i;
+          break;
+        }
+      }
+      if (lastUserIdx === -1) return null;
+
+      const userMsg = state.chatHistory[lastUserIdx];
+      update(s => ({
+        ...s,
+        chatHistory: s.chatHistory.slice(0, lastUserIdx),
+        error: null,
+        interrupted: false,
+        streamingContent: '',
+      }));
+
+      return { content: userMsg.content, images: userMsg.images };
+    },
     getState() {
       return get({ subscribe });
     },
