@@ -22,6 +22,7 @@ import { isMacOS } from '../../utils/platform';
 import { parseMarkdown } from '../markdown';
 
 const editorPropsKey = new PluginKey('moraya-editor-props');
+const fakeCaretComposingMeta = 'moraya-fake-caret-composing';
 
 function renderFakeCaret(): HTMLElement {
   const el = document.createElement('span');
@@ -80,6 +81,16 @@ export function createEditorPropsPlugin(): Plugin {
 
   return new Plugin({
     key: editorPropsKey,
+    state: {
+      init: () => ({ isComposing: false }),
+      apply(tr, value: { isComposing: boolean }) {
+        const composing = tr.getMeta(fakeCaretComposingMeta);
+        if (typeof composing === 'boolean' && composing !== value.isComposing) {
+          return { isComposing: composing };
+        }
+        return value;
+      },
+    },
 
     props: {
       /**
@@ -224,6 +235,27 @@ export function createEditorPropsPlugin(): Plugin {
           if (anchor) {
             me.preventDefault();
           }
+          return false;
+        },
+
+        compositionstart(view) {
+          const pluginState = editorPropsKey.getState(view.state) as { isComposing: boolean } | undefined;
+          if (pluginState?.isComposing) return false;
+          view.dispatch(view.state.tr.setMeta(fakeCaretComposingMeta, true));
+          return false;
+        },
+
+        compositionend(view) {
+          const pluginState = editorPropsKey.getState(view.state) as { isComposing: boolean } | undefined;
+          if (!pluginState?.isComposing) return false;
+          view.dispatch(view.state.tr.setMeta(fakeCaretComposingMeta, false));
+          return false;
+        },
+
+        blur(view) {
+          const pluginState = editorPropsKey.getState(view.state) as { isComposing: boolean } | undefined;
+          if (!pluginState?.isComposing) return false;
+          view.dispatch(view.state.tr.setMeta(fakeCaretComposingMeta, false));
           return false;
         },
 
@@ -522,11 +554,13 @@ export function createEditorPropsPlugin(): Plugin {
 
       /**
        * WKWebView caret fix:
-       * Use a widget-based fake caret for any empty text selection on macOS.
-       * This avoids WebKit's native caret height bug in wrapped paragraphs.
+       * Use a widget-based fake caret for empty text selections on macOS.
+       * Disable it during IME composition so native composition ranges remain stable.
        */
       decorations(state) {
         if (!isMacOS) return DecorationSet.empty;
+        const pluginState = editorPropsKey.getState(state) as { isComposing: boolean } | undefined;
+        if (pluginState?.isComposing) return DecorationSet.empty;
         const { selection } = state;
         if (!selection.empty) return DecorationSet.empty;
 
@@ -538,6 +572,7 @@ export function createEditorPropsPlugin(): Plugin {
             Decoration.widget(pos, renderFakeCaret, {
               side: -1,
               key: `pm-fake-caret-${pos}`,
+              ignoreSelection: true,
             }),
           ]);
         }

@@ -819,9 +819,9 @@
 }
 
 /* WebKit caret fix:
-   Use a widget-based fake caret on macOS for empty text selections.
-   This avoids WKWebView rendering an overly tall native caret inside
-   wrapped paragraphs while keeping document layout unchanged. */
+   Render a fake caret for empty text selections so wrapped paragraphs do not
+   inherit WebKit's overly tall native caret. The fake caret is disabled during
+   IME composition to keep native composition ranges intact. */
 @keyframes moraya-blink-caret {
   from, to { opacity: 1; }
   50% { opacity: 0; }
@@ -829,7 +829,7 @@
 
 /* Only apply on macOS (WebKit) — on Windows/Linux (Chromium) the native caret works fine
    and this CSS would create a double/ghost cursor. */
-.platform-macos .ProseMirror:focus {
+.platform-macos .ProseMirror:focus:has(.pm-fake-caret) {
   caret-color: transparent;
 }
 .platform-macos .ProseMirror:focus .pm-fake-caret {
