@@ -838,7 +838,7 @@
   height: 1em;
   margin-left: -0.75px;
   border-left: 1.5px solid var(--text-primary);
-  animation: moraya-blink-caret 1s step-end infinite;
+  animation: moraya-blink-caret 1.5s step-end infinite;
   vertical-align: text-bottom;
   pointer-events: none;
   user-select: none;
