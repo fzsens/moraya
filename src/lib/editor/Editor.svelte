@@ -108,6 +108,10 @@
     } catch { cachedHeadingTops = []; }
   }
 
+  function isComposingKeyEvent(event: KeyboardEvent): boolean {
+    return event.isComposing || event.keyCode === 229;
+  }
+
   /** Schedule outline heading extraction. Skipped when outline is hidden. */
   function scheduleExtractHeadings() {
     if (!showOutline) return;
@@ -1336,6 +1340,8 @@
     // with a single empty paragraph in one fast transaction.
     // The visual caret for the empty paragraph is handled by CSS (editor.css).
     const handleEditorKeydown = (e: KeyboardEvent) => {
+      if (isComposingKeyEvent(e)) return;
+
       if ((e.key === 'Backspace' || e.key === 'Delete') && editor) {
         try {
           const view = editor.view;

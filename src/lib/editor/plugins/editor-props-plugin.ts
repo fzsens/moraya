@@ -23,6 +23,13 @@ import { parseMarkdown } from '../markdown';
 
 const editorPropsKey = new PluginKey('moraya-editor-props');
 
+function isComposingKeyEvent(event: KeyboardEvent): boolean {
+  // Only trust the key event itself here. `view.composing` can remain true
+  // slightly longer than the IME interaction, which makes normal Backspace
+  // after committing Chinese text feel delayed.
+  return event.isComposing || event.keyCode === 229;
+}
+
 /** Detect whether a URL is a local file path (absolute or relative). */
 function isLocalFilePath(href: string): boolean {
   // Absolute Unix/macOS paths
@@ -287,6 +294,8 @@ export function createEditorPropsPlugin(): Plugin {
          * Cmd/Ctrl held → add 'link-hover' class for pointer cursor on links.
          */
         keydown(view, event) {
+          if (isComposingKeyEvent(event)) return false;
+
           if (event.key === 'Meta' || event.key === 'Control') {
             view.dom.classList.add('link-hover');
           }
@@ -440,6 +449,8 @@ export function createEditorPropsPlugin(): Plugin {
        * Intercept before native menu accelerator and dispatch proper AllSelection.
        */
       handleKeyDown(view, event) {
+        if (isComposingKeyEvent(event)) return false;
+
         // ── Cmd/Ctrl+A → proper AllSelection ──
         const mod = event.metaKey || event.ctrlKey;
         if (mod && !event.shiftKey && !event.altKey && event.key === 'a') {
