@@ -221,12 +221,12 @@ function createTabsStore() {
     },
 
     /** Update the active tab's file info after a save */
-    updateActiveFile(filePath: string, fileName: string, mtime?: number | null) {
+    updateActiveFile(filePath: string, fileName: string, content: string, mtime?: number | null) {
       update(state => ({
         ...state,
         tabs: state.tabs.map(tab =>
           tab.id === state.activeTabId
-            ? { ...tab, filePath, fileName, isDirty: false, lastMtime: mtime ?? tab.lastMtime }
+            ? { ...tab, filePath, fileName, content, isDirty: false, lastMtime: mtime ?? tab.lastMtime }
             : tab
         ),
       }));

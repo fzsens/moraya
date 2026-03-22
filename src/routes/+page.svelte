@@ -294,6 +294,17 @@ ${tr('welcome.tip')}
     return content;
   }
 
+  /** Flush the visible editor's latest markdown into editorStore/tab state before tab/file actions. */
+  function syncCurrentTabSnapshot(): string {
+    const tabState = tabsStore.getState();
+    const activeTab = tabState.tabs.find(t => t.id === tabState.activeTabId);
+    if (activeTab?.isImage) return content;
+    const latestContent = getCurrentContent();
+    editorStore.setContent(latestContent);
+    tabsStore.syncFromEditor();
+    return latestContent;
+  }
+
   /** Sync content to the active visual editor (atomically updates storedFrontmatter). */
   function syncVisualEditor(md: string) {
     const mode = editorStore.getState().editorMode;
@@ -355,23 +366,27 @@ ${tr('welcome.tip')}
   async function handleSave(asNew = false): Promise<boolean> {
     const prevFilePath = editorStore.getState().currentFilePath;
     const latestContent = getCurrentContent();
+    editorStore.setContent(latestContent);
     const saved = asNew ? await saveFileAs(latestContent) : await saveFile(latestContent);
 
     if (saved) {
       const state = editorStore.getState();
       const newFilePath = state.currentFilePath;
+      let finalContent = latestContent;
 
       if (newFilePath) {
+        const fileName = getFileNameFromPath(newFilePath);
+        tabsStore.updateActiveFile(newFilePath, fileName, finalContent);
         // Fetch mtime after save for external change detection
         invoke('get_files_mtime', { paths: [newFilePath] }).then((result: unknown) => {
           const mtimes = result as [string, number][];
           if (mtimes.length > 0) {
-            tabsStore.updateActiveFile(newFilePath, getFileNameFromPath(newFilePath), mtimes[0][1]);
+            tabsStore.updateActiveFile(newFilePath, fileName, finalContent, mtimes[0][1]);
           } else {
-            tabsStore.updateActiveFile(newFilePath, getFileNameFromPath(newFilePath));
+            tabsStore.updateActiveFile(newFilePath, fileName, finalContent);
           }
         }).catch(() => {
-          tabsStore.updateActiveFile(newFilePath, getFileNameFromPath(newFilePath));
+          tabsStore.updateActiveFile(newFilePath, fileName, finalContent);
         });
       }
 
@@ -392,7 +407,11 @@ ${tr('welcome.tip')}
             }
             if (updatedContent !== latestContent) {
               await invoke('write_file', { path: newFilePath, content: updatedContent });
+              finalContent = updatedContent;
+              content = updatedContent;
               editorStore.setContent(updatedContent);
+              tabsStore.updateActiveFile(newFilePath, getFileNameFromPath(newFilePath), updatedContent);
+              syncVisualEditor(updatedContent);
               window.dispatchEvent(new CustomEvent('moraya:file-synced', { detail: { content: updatedContent } }));
             }
           }
@@ -1033,7 +1052,7 @@ ${tr('welcome.tip')}
 
   async function handleOpenFile() {
     // Sync current tab state BEFORE openFile() modifies editorStore
-    tabsStore.syncFromEditor();
+    syncCurrentTabSnapshot();
     const fileContent = await openFile();
     if (fileContent !== null) {
       // openFile() already called editorStore.setCurrentFile(path)
@@ -1053,6 +1072,7 @@ ${tr('welcome.tip')}
   }
 
   async function handleNewFile() {
+    syncCurrentTabSnapshot();
     tabsStore.addTab();
     content = '';
     resetWorkflowState();
@@ -1085,6 +1105,7 @@ ${tr('welcome.tip')}
   }
 
   function handleSwitchTab(tabId: string) {
+    syncCurrentTabSnapshot();
     tabsStore.switchTab(tabId);
   }
 
@@ -1317,14 +1338,14 @@ ${tr('welcome.tip')}
 
     // Image files: open as image tab (read-only preview)
     if (isImageFile(fileName)) {
-      tabsStore.syncFromEditor();
+      syncCurrentTabSnapshot();
       tabsStore.openFileTab(path, fileName, '', null, true, true);
       return;
     }
 
     // Sync current tab state BEFORE loadFile() — loadFile calls editorStore.setContent()
     // which would pollute the old tab if syncFromEditor runs after it.
-    tabsStore.syncFromEditor();
+    syncCurrentTabSnapshot();
     const fileContent = await loadFile(path);
     if (mySerial !== fileSelectSerial) return; // Superseded while IPC was in-flight
     // Fetch mtime for external change detection
@@ -2068,7 +2089,7 @@ ${tr('welcome.tip')}
       // Helper: load a file by path and open in a tab
       async function openFileByPath(filePath: string) {
         // Sync current tab BEFORE loadFile() pollutes editorStore
-        tabsStore.syncFromEditor();
+        syncCurrentTabSnapshot();
         const fileContent = await loadFile(filePath);
         const fileName = getFileNameFromPath(filePath);
         let mtime: number | null = null;
