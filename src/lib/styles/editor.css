@@ -818,10 +818,12 @@
   line-height: var(--line-height);
 }
 
-/* WebKit caret fix:
-   Render a fake caret for empty text selections so wrapped paragraphs do not
-   inherit WebKit's overly tall native caret. The fake caret is disabled during
-   IME composition to keep native composition ranges intact. */
+/* WebKit caret fix: WKWebView does not paint the native caret inside a <p>
+   that only contains a <br> (i.e. an empty paragraph). The element IS focused
+   and keystrokes DO register, but the blinking cursor is not rendered.
+   Fix: a ProseMirror plugin (caretFixPlugin in setup.ts) adds the
+   'caret-empty-para' class to whichever empty paragraph contains the cursor.
+   CSS then renders a fake animated caret via ::before. */
 @keyframes moraya-blink-caret {
   from, to { opacity: 1; }
   50% { opacity: 0; }
@@ -829,19 +831,20 @@
 
 /* Only apply on macOS (WebKit) — on Windows/Linux (Chromium) the native caret works fine
    and this CSS would create a double/ghost cursor. */
-.platform-macos .ProseMirror:focus:has(.pm-fake-caret) {
+/* Hide native caret when fake caret is active to prevent double cursors */
+.platform-macos .ProseMirror:focus .caret-empty-para {
   caret-color: transparent;
 }
-.platform-macos .ProseMirror:focus .pm-fake-caret {
+.platform-macos .ProseMirror:focus .caret-empty-para:empty::before,
+.platform-macos .ProseMirror:focus .caret-empty-para:has(> br:only-child)::before {
+  content: '';
   display: inline-block;
-  width: 0;
-  height: 1em;
-  margin-left: -0.75px;
-  border-left: 1.5px solid var(--text-primary);
-  animation: moraya-blink-caret 1.5s step-end infinite;
+  width: 1.5px;
+  height: 1.2em;
+  background-color: var(--text-primary);
+  animation: moraya-blink-caret 1s step-end infinite;
   vertical-align: text-bottom;
   pointer-events: none;
-  user-select: none;
 }
 
 .ProseMirror > *:first-child {
