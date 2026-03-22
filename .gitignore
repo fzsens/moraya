@@ -94,3 +94,4 @@ coverage/
 *.bak
 *.tmp
 docs/homebrew-moraya
+docs/development-guide.md
