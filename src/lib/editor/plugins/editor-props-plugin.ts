@@ -8,7 +8,7 @@
  *  - handleDOMEvents.keydown/keyup: toggle link-hover cursor class on Cmd/Ctrl
  *  - handleClickOn: image click → TextSelection (prevent NodeSelection blue highlight)
  *  - handleKeyDown: macOS Cmd+A / Ctrl+A → AllSelection fix
- *  - decorations: WKWebView caret fix for empty paragraphs
+ *  - decorations: WKWebView fake caret for empty text selections
  *  - view lifecycle: scroll-after-paste (scroll .editor-wrapper to cursor)
  *
  * Reducing 5 plugin instances to 1 saves ~4 apply() traversals per transaction.
@@ -22,6 +22,14 @@ import { isMacOS } from '../../utils/platform';
 import { parseMarkdown } from '../markdown';
 
 const editorPropsKey = new PluginKey('moraya-editor-props');
+const fakeCaretComposingMeta = 'moraya-fake-caret-composing';
+
+function renderFakeCaret(): HTMLElement {
+  const el = document.createElement('span');
+  el.className = 'pm-fake-caret';
+  el.setAttribute('aria-hidden', 'true');
+  return el;
+}
 
 function isComposingKeyEvent(event: KeyboardEvent): boolean {
   // Only trust the key event itself here. `view.composing` can remain true
@@ -73,6 +81,16 @@ export function createEditorPropsPlugin(): Plugin {
 
   return new Plugin({
     key: editorPropsKey,
+    state: {
+      init: () => ({ isComposing: false }),
+      apply(tr, value: { isComposing: boolean }) {
+        const composing = tr.getMeta(fakeCaretComposingMeta);
+        if (typeof composing === 'boolean' && composing !== value.isComposing) {
+          return { isComposing: composing };
+        }
+        return value;
+      },
+    },
 
     props: {
       /**
@@ -217,6 +235,27 @@ export function createEditorPropsPlugin(): Plugin {
           if (anchor) {
             me.preventDefault();
           }
+          return false;
+        },
+
+        compositionstart(view) {
+          const pluginState = editorPropsKey.getState(view.state) as { isComposing: boolean } | undefined;
+          if (pluginState?.isComposing) return false;
+          view.dispatch(view.state.tr.setMeta(fakeCaretComposingMeta, true));
+          return false;
+        },
+
+        compositionend(view) {
+          const pluginState = editorPropsKey.getState(view.state) as { isComposing: boolean } | undefined;
+          if (!pluginState?.isComposing) return false;
+          view.dispatch(view.state.tr.setMeta(fakeCaretComposingMeta, false));
+          return false;
+        },
+
+        blur(view) {
+          const pluginState = editorPropsKey.getState(view.state) as { isComposing: boolean } | undefined;
+          if (!pluginState?.isComposing) return false;
+          view.dispatch(view.state.tr.setMeta(fakeCaretComposingMeta, false));
           return false;
         },
 
@@ -515,19 +554,26 @@ export function createEditorPropsPlugin(): Plugin {
 
       /**
        * WKWebView caret fix:
-       * Add 'caret-empty-para' decoration to empty paragraph under cursor on macOS.
+       * Use a widget-based fake caret for empty text selections on macOS.
+       * Disable it during IME composition so native composition ranges remain stable.
        */
       decorations(state) {
         if (!isMacOS) return DecorationSet.empty;
+        const pluginState = editorPropsKey.getState(state) as { isComposing: boolean } | undefined;
+        if (pluginState?.isComposing) return DecorationSet.empty;
         const { selection } = state;
         if (!selection.empty) return DecorationSet.empty;
 
         const { $from } = selection;
         const parent = $from.parent;
-        if (parent.type.name === 'paragraph' && parent.content.size === 0) {
-          const pos = $from.before();
+        if (parent.isTextblock) {
+          const pos = selection.from;
           return DecorationSet.create(state.doc, [
-            Decoration.node(pos, pos + parent.nodeSize, { class: 'caret-empty-para' }),
+            Decoration.widget(pos, renderFakeCaret, {
+              side: -1,
+              key: `pm-fake-caret-${pos}`,
+              ignoreSelection: true,
+            }),
           ]);
         }
         return DecorationSet.empty;
